@@ -388,6 +388,7 @@ export default function CinematicScroll() {
 
       if (Math.abs(targetP - currentP) < 0.0001) {
         currentP = targetP;
+        rafId = 0; // IMPORTANT: reset rafId so onScroll can trigger it again
       } else {
         rafId = requestAnimationFrame(update);
       }
