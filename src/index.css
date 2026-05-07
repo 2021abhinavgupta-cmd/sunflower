@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: #02040E;
+  color: #F5E6C0;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Firefly animations */
+@keyframes ff-float {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(18px, -14px); }
+  100% { transform: translate(-14px, 9px); }
+}
+@keyframes ff-blink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 10px 4px rgba(255,240,120,0.9), 0 0 24px 8px rgba(255,220,60,0.45); }
+  50% { opacity: 0.25; box-shadow: 0 0 4px 1px rgba(255,240,120,0.3); }
+}
+
+/* Smooth scroll snapping feel */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #02040E; }
+::-webkit-scrollbar-thumb { background: rgba(255,210,62,0.35); border-radius: 3px; }
