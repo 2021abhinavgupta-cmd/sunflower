@@ -539,7 +539,9 @@ export default function CinematicScroll() {
 
     const onScroll = () => { 
       const rect = section.getBoundingClientRect();
-      const total = section.offsetHeight - window.innerHeight;
+      // Subtracting 3.5x window height creates a "dead zone" at the end of the scroll
+      // where p remains 1.0, keeping the LetterCard on screen while the user continues to scroll
+      const total = section.offsetHeight - window.innerHeight * 3.5;
       targetP = clamp(-rect.top / total, 0, 1);
       if (!rafId) rafId = requestAnimationFrame(update); 
     };
@@ -554,7 +556,7 @@ export default function CinematicScroll() {
   }, []);
 
   return (
-    <section ref={sectionRef} style={{ position: "relative", width: "100%", height: "780vh" }}>
+    <section ref={sectionRef} style={{ position: "relative", width: "100%", height: "950vh" }}>
       <style>{`
         @keyframes ff-float { 0%{transform:translate(0,0)} 50%{transform:translate(18px,-14px)} 100%{transform:translate(-14px,9px)} }
         @keyframes ff-blink { 0%,100%{opacity:1;box-shadow:0 0 10px 4px rgba(255,240,120,0.9),0 0 24px 8px rgba(255,220,60,0.45)} 50%{opacity:0.25;box-shadow:0 0 4px 1px rgba(255,240,120,0.3)} }
