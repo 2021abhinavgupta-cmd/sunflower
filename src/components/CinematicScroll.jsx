@@ -209,6 +209,48 @@ function Fireflies() {
   );
 }
 
+// ─── Pollen ────────────────────────────────────────────────────────────────
+function Pollen() {
+  const cvRef = useRef(null);
+  useEffect(() => {
+    const cv = cvRef.current; if (!cv) return;
+    const ctx = cv.getContext("2d");
+    let raf, t = 0;
+    let particles = [];
+    const init = () => {
+      cv.width = window.innerWidth; cv.height = window.innerHeight;
+      particles = Array.from({ length: 70 }).map(() => ({
+        x: Math.random() * cv.width, y: Math.random() * cv.height,
+        s: Math.random() * 2.5 + 0.5,
+        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 1) * 0.4 - 0.2,
+        off: Math.random() * 100
+      }));
+    };
+    init(); window.addEventListener("resize", init);
+    const tick = () => {
+      t += 0.015;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      const op = parseFloat(cv.style.opacity || 0);
+      if (op > 0.01) {
+        particles.forEach(p => {
+          p.x += p.vx + Math.sin(t + p.off) * 0.6;
+          p.y += p.vy;
+          if (p.y < 0) p.y = cv.height;
+          if (p.x < 0) p.x = cv.width;
+          if (p.x > cv.width) p.x = 0;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 230, 160, ${op * (0.3 + Math.sin(t*2 + p.off)*0.2)})`;
+          ctx.fill();
+        });
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => { window.removeEventListener("resize", init); cancelAnimationFrame(raf); };
+  }, []);
+  return <canvas ref={cvRef} id="pollen-canvas" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0, transition: "opacity 0.4s", zIndex: 6 }} aria-hidden />;
+}
+
 // ─── Hills ────────────────────────────────────────────────────────────────────
 function Hills() {
   return (
@@ -338,15 +380,17 @@ export default function CinematicScroll() {
 
   useEffect(() => {
     const section = sectionRef.current; if (!section) return;
-    let rafId = 0, lastP = -1;
+    let rafId = 0, currentP = 0, targetP = 0;
 
     const update = () => {
-      rafId = 0;
-      const rect = section.getBoundingClientRect();
-      const total = section.offsetHeight - window.innerHeight;
-      const p = clamp(-rect.top / total, 0, 1);
-      if (Math.abs(p - lastP) < 0.00025) return;
-      lastP = p;
+      currentP += (targetP - currentP) * 0.055; // Smooth scrolling factor
+      const p = currentP;
+
+      if (Math.abs(targetP - currentP) < 0.0001) {
+        currentP = targetP;
+      } else {
+        rafId = requestAnimationFrame(update);
+      }
 
       // Sky
       const sky = getSky(p);
@@ -398,7 +442,7 @@ export default function CinematicScroll() {
         sunInner.style.background =
           `radial-gradient(circle at 35% 35%,#FFFFFF 0%,${sunColor} 45%,${sunColor}CC 100%)`;
         sunInner.style.boxShadow =
-          `0 0 70px 28px ${sunColor}BB, 0 0 130px 55px ${sunColor}55`;
+          `0 0 80px 30px ${sunColor}BB, 0 0 160px 70px ${sunColor}66, 0 0 350px 120px ${sunColor}22`;
       }
 
       // Moon
@@ -439,6 +483,13 @@ export default function CinematicScroll() {
       // Fireflies
       const ffEl = document.getElementById("firefly-layer");
       if (ffEl) ffEl.style.opacity = p > 0.86 ? clamp((p - 0.86) / 0.08, 0, 1) : 0;
+
+      // Pollen
+      const pollenCv = document.getElementById("pollen-canvas");
+      if (pollenCv) {
+        const pop = p > 0.20 && p < 0.85 ? clamp((p - 0.20)/0.05, 0, 1) * (1 - clamp((p - 0.80)/0.05, 0, 1)) : 0;
+        pollenCv.style.opacity = pop;
+      }
 
       // Hills darkening
       const hd = p > 0.82 ? clamp((p - 0.82) / 0.12, 0, 1) : 0;
@@ -485,8 +536,13 @@ export default function CinematicScroll() {
       if (p > 0.04) setShowHint(false);
     };
 
-    const onScroll = () => { if (!rafId) rafId = requestAnimationFrame(update); };
-    update();
+    const onScroll = () => { 
+      const rect = section.getBoundingClientRect();
+      const total = section.offsetHeight - window.innerHeight;
+      targetP = clamp(-rect.top / total, 0, 1);
+      if (!rafId) rafId = requestAnimationFrame(update); 
+    };
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
@@ -530,6 +586,7 @@ export default function CinematicScroll() {
 
         <Clouds />
         <Birds />
+        <Pollen />
         <Hills />
         <GrassCanvas />
         <Fireflies />
